@@ -13,6 +13,14 @@ library(shiny)
 shinyUI(fluidPage(
     
     
+    # This is the UI page for the Candy Simulation Model. None of the Logic is present on this page.
+    # This page generates input/output boxes, plots, and event buttons. New buttons can be added
+    # to either the main panel or the side panel. In the future more panels could be added to clean up
+    # the UI.
+    #
+    #
+    
+    
     # Application title
     titlePanel("Candy Simulation Model"),
     sidebarLayout(
@@ -39,10 +47,10 @@ shinyUI(fluidPage(
             
             numericInput("neg_test", "Number of Negative Tests: ", value = 0, min = 0, max = NA, step = NA),
             
-            actionButton("iterate", "Iterate Once"),
-            actionButton("iterate_many", "Generate Plot for 100 Iterations"),
+            #actionButton("iterate", "Iterate Once"),
+            #actionButton("iterate_many", "Generate Plot for 100 Iterations"),
             
-            
+            textOutput("Initial_Conditions"),
             actionButton("baseline_bad", "Baseline Bad Food Safety System"),
             actionButton("onepos", "1 Positive Test"),
             actionButton("onelog", "1 Log Reduction, Cooking"),
@@ -59,7 +67,11 @@ shinyUI(fluidPage(
         
         # Show a plot of the generated distribution
         mainPanel(
+            actionButton("iterate", "Iterate Once"),
+            actionButton("iterate_many50", "Generate Plot for 50 Iterations"),
+            actionButton("iterate_many", "Generate Plot for 100 Iterations"),
             textOutput("Number_Sick"),
+            plotOutput("plotting50_output"),
             plotOutput("plotting_output")
         )
     )

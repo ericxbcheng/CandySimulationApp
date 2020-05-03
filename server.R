@@ -6,29 +6,60 @@
 #
 #    http://shiny.rstudio.com/
 #
-number_sick <- function(candy_on_market, min_log_red = 0.5, max_log_red = 1.5, log_reduction_per_week_storage, storage_weeks, candy_servings_grams = 20, fraction_fondant = 0.75, fraction_peanut_paste_fondant = 0.24, cells_per_gram_peanut_paste, positive_tests, negative_tests) {
-    B6 <- candy_servings_grams * fraction_fondant
-    B8 <- B6 * fraction_peanut_paste_fondant
-    C12 <- B8
-    C11 <- cells_per_gram_peanut_paste
-    C13 <- C11 * C12
-    C20 <- log_reduction_per_week_storage * storage_weeks
-    C17 <- runif(1, min_log_red, max_log_red)
-    C14 <- log10(C13)
+
+#number_sick <- function(candy_on_market, min_log_red = 0.5, max_log_red = 1.5, log_reduction_per_week_storage, storage_weeks, candy_servings_grams = 20, fraction_fondant = 0.75, fraction_peanut_paste_fondant = 0.24, cells_per_gram_peanut_paste, positive_tests, negative_tests) {
+#    B6 <- candy_servings_grams * fraction_fondant
+#    B8 <- B6 * fraction_peanut_paste_fondant
+#    C12 <- B8
+#    C11 <- cells_per_gram_peanut_paste
+#    C13 <- C11 * C12
+#    C20 <- log_reduction_per_week_storage * storage_weeks
+#    C17 <- runif(1, min_log_red, max_log_red)
+#    C14 <- log10(C13)
     #C29 <- negative_tests + 1
     #C28 <- positive_tests + 1
     #C30 <- rbeta(1, C28, C29)
-    C30 <- rbeta(1, positive_tests + 1, negative_tests + 1)
-    C21 <- C14 - C17 - C20
-    C22 <- 10^(C21)
-    C35 <- rbinom(1, 1, C30)
-    C37 <- C35 * C22
-    C40 <- 0.13 #constant from literature
-    C41 <- 51.45 #constant from literature
-    C42 <- 1 - (1 + (C37/C41))^(-C40)
-    toReturn <- rbinom(candy_on_market, 1, C42)
-    return(toReturn)
+#    C30 <- rbeta(1, positive_tests + 1, negative_tests + 1)
+#    C21 <- C14 - C17 - C20
+#    C22 <- 10^(C21)
+#    C35 <- rbinom(1, 1, C30)
+#    C37 <- C35 * C22
+#    C40 <- 0.13 #constant from literature
+#    C41 <- 51.45 #constant from literature
+#    C42 <- 1 - (1 + (C37/C41))^(-C40)
+#    toReturn <- rbinom(candy_on_market, 1, C42)
+#    return(toReturn)
+#}
+
+#THE FUNCTION ABOVE IS THE OLD MODEL. New model cuts run time by 50%.
+
+number_sick <- function(candy_on_market, min_log_red = 0.5, max_log_red = 1.5, log_reduction_per_week_storage, storage_weeks, candy_servings_grams = 20, fraction_fondant = 0.75, fraction_peanut_paste_fondant = 0.24, cells_per_gram_peanut_paste, positive_tests, negative_tests) {
+  B6 <- candy_servings_grams * fraction_fondant
+  #browser()
+  B8 <- B6 * fraction_peanut_paste_fondant
+  C12 <- B8
+  C11 <- cells_per_gram_peanut_paste
+  C13 <- C11 * C12
+  C20 <- log_reduction_per_week_storage * storage_weeks
+  C17 <- runif(n = candy_on_market/7 , min = min_log_red, max = max_log_red)
+  C14 <- log10(C13)
+  #C29 <- negative_tests + 1
+  #C28 <- positive_tests + 1
+  #C30 <- rbeta(1, C28, C29)
+  C30 <- rbeta(candy_on_market/7, positive_tests + 1, negative_tests + 1)
+  C21 <- C14 - C17 - C20
+  C22 <- 10^(C21)
+  C35 <- rbinom(candy_on_market/7, 1, C30)
+  C37 <- C35 * C22
+  C40 <- 0.13 #constant from literature
+  C41 <- 51.45 #constant from literature
+  C42 <- 1 - (1 + (C37/C41))^(-C40)
+  toReturn <- sapply(C42 , rbinom, size = 1, n = 7)
+  #toReturn <- rbinom(candy_on_market, 1, C42)
+  return(toReturn)
 }
+
+
 iteration <- function() {
   sum(
     replicate(n = 210000/7, expr = {
@@ -64,24 +95,32 @@ shinyServer(function(input, output, session) {
     input$cfus
     input$pos_test
     input$neg_test
+    
+    sum(number_sick(candy_on_market = input$candy, min_log_red = input$min_log, max_log_red = input$max_log,
+                                     log_reduction_per_week_storage = input$log_red_week, storage_weeks = input$stor_week,
+                                     candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant,
+                                     fraction_peanut_paste_fondant = input$frac_peanut,
+                                     cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test,
+                                     negative_tests = input$neg_test))
     #(number_sick(candy_on_market = input$candy, min_log_red = input$min_log, max_log_red = input$max_log ,log_reduction_per_week_storage = input$log_red_week , storage_weeks = input$stor_week , candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant, fraction_peanut_paste_fondant = input$frac_peanut, cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test, negative_tests = input$neg_test))
   
-   sum(
-        replicate(n = input$candy / 7, expr = {
-          number_sick(candy_on_market = 7, min_log_red = input$min_log, max_log_red = input$max_log,
-                    log_reduction_per_week_storage = input$log_red_week, storage_weeks = input$stor_week,
-                    candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant,
-                    fraction_peanut_paste_fondant = input$frac_peanut,
-                    cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test,
-                    negative_tests = input$neg_test)
-      })
-    )
+   #sum(
+   #     replicate(n = input$candy / 7, expr = {
+   #       number_sick(candy_on_market = 7, min_log_red = input$min_log, max_log_red = input$max_log,
+   #                 log_reduction_per_week_storage = input$log_red_week, storage_weeks = input$stor_week,
+   #                 candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant,
+   #                 fraction_peanut_paste_fondant = input$frac_peanut,
+   #                 cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test,
+   #                 negative_tests = input$neg_test)
+   #   })
+   # )
   })
   
   
   #output$Number_Sick <- renderText(text_reactive())
   output$Number_Sick <- renderText(paste("Number of People Sick for 1 Iteration: ", text_reactive(), sep = " "))
   
+  output$Initial_Conditions <- renderText(paste("Initial Conditions: ", " ", sep = "\n" ))
   
   plot_reactive <- eventReactive(input$iterate_many, {
     input$candy
@@ -95,20 +134,69 @@ shinyServer(function(input, output, session) {
     input$cfus
     input$pos_test
     input$neg_test
+    #hist(xlab = "Number of People Sick",main = "Over 100 Iterations",replicate(n = 100, expr = {sum(
+    #  replicate(n = input$candy / 7, expr = {
+    #    number_sick(candy_on_market = 7, min_log_red = input$min_log, max_log_red = input$max_log,
+    #                log_reduction_per_week_storage = input$log_red_week, storage_weeks = input$stor_week,
+    #                candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant,
+    #                fraction_peanut_paste_fondant = input$frac_peanut,
+    #                cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test,
+    #                negative_tests = input$neg_test)
+   #   })
+   # )}))
+    
+    
+    
     hist(xlab = "Number of People Sick",main = "Over 100 Iterations",replicate(n = 100, expr = {sum(
-      replicate(n = input$candy / 7, expr = {
-        number_sick(candy_on_market = 7, min_log_red = input$min_log, max_log_red = input$max_log,
-                    log_reduction_per_week_storage = input$log_red_week, storage_weeks = input$stor_week,
-                    candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant,
-                    fraction_peanut_paste_fondant = input$frac_peanut,
-                    cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test,
-                    negative_tests = input$neg_test)
-      })
-    )}))
+      number_sick(candy_on_market = input$candy, min_log_red = input$min_log, max_log_red = input$max_log,
+                  log_reduction_per_week_storage = input$log_red_week, storage_weeks = input$stor_week,
+                  candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant,
+                  fraction_peanut_paste_fondant = input$frac_peanut,
+                  cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test,
+                  negative_tests = input$neg_test)
+       )}))
     
   })
   
   output$plotting_output <- renderPlot(plot_reactive())
+  
+  plot_reactive2 <- eventReactive(input$iterate_many50, {
+    input$candy
+    input$min_log
+    input$max_log
+    input$log_red_week
+    input$stor_week
+    input$candy_serving
+    input$frac_fondant
+    input$frac_peanut
+    input$cfus
+    input$pos_test
+    input$neg_test
+    #hist(xlab = "Number of People Sick",main = "Over 100 Iterations",replicate(n = 100, expr = {sum(
+    #  replicate(n = input$candy / 7, expr = {
+    #    number_sick(candy_on_market = 7, min_log_red = input$min_log, max_log_red = input$max_log,
+    #                log_reduction_per_week_storage = input$log_red_week, storage_weeks = input$stor_week,
+    #                candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant,
+    #                fraction_peanut_paste_fondant = input$frac_peanut,
+    #                cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test,
+    #                negative_tests = input$neg_test)
+    #   })
+    # )}))
+    
+    
+    
+    hist(xlab = "Number of People Sick",main = "Over 50 Iterations",replicate(n = 50, expr = {sum(
+      number_sick(candy_on_market = input$candy, min_log_red = input$min_log, max_log_red = input$max_log,
+                  log_reduction_per_week_storage = input$log_red_week, storage_weeks = input$stor_week,
+                  candy_servings_grams = input$candy_serving, fraction_fondant = input$frac_fondant,
+                  fraction_peanut_paste_fondant = input$frac_peanut,
+                  cells_per_gram_peanut_paste = input$cfus, positive_tests = input$pos_test,
+                  negative_tests = input$neg_test)
+    )}))
+    
+  })
+  
+  output$plotting50_output <- renderPlot(plot_reactive2())
   
   #INITIAL Condition Buttons
   
