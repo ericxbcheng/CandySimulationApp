@@ -198,6 +198,26 @@ shinyServer(function(input, output, session) {
   
   output$plotting50_output <- renderPlot(plot_reactive2())
   
+  #This block plots the Probability of a positive given sampling results.
+  
+  output$probability_positive <- renderPlot({
+    x <- seq(0, 1, by = 0.01)
+    y <- dbinom(0, input$probpositive, x)
+    plot(x, y, xlab = "Chance of Positive", ylab = "Probability", main = "Probability of Positive Given Sampling Results")
+  })
+  
+  #This chunk of code plots the Salmonella Dose Response Model.
+  
+    output$salmonella_dose <- renderPlot({
+    x <- seq(0, 100000000, by = 100)
+    y <- 1-(1+x/input$parameter_2)^-input$parameter_1
+    ##plot(x, y,log = 'x' ,xlab = "Chance of Positive", ylab = "Probability", main = "Probability of Positive Given Sampling Results")
+    #axis(2, at = 10^(c(2, 4, 6)))
+    curve(1-(1+x/input$parameter_2)^-input$parameter_1, from=1, to=100000000, n=300, xlab="Dose [(cells/serving)]", ylab="Response [Prob(Sick)]", 
+            col="blue",log = "x", main="Salmonella Dose Response Model"  )
+    })
+  
+  
   #INITIAL Condition Buttons
   
   #BASELINE

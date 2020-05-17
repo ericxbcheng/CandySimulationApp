@@ -72,7 +72,12 @@ shinyUI(fluidPage(
             actionButton("iterate_many", "Generate Plot for 100 Iterations"),
             textOutput("Number_Sick"),
             plotOutput("plotting50_output"),
-            plotOutput("plotting_output")
+            plotOutput("plotting_output"),
+            sliderInput("probpositive", label = "Number of Negative Tests: ", min = 1, max = 100, value = 10, step = 1),
+            plotOutput("probability_positive"),
+            numericInput("parameter_1", label = "Parameter 1: ", value = 0.13, min = 0, max = 10, step = 0.01),
+            numericInput("parameter_2", label = "Parameter 2: ", value = 51.45, min = 0, max = 100, step = 0.01),
+            plotOutput("salmonella_dose")
         )
     )
 
