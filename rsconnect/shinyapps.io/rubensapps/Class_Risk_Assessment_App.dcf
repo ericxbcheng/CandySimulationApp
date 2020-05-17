@@ -5,8 +5,8 @@ account: rubensapps
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2053442
-bundleId: 2966122
+bundleId: 3092589
 url: https://rubensapps.shinyapps.io/Class_Risk_Assessment_App/
-when: 1585945947.77009
+when: 1588388182.78423
 asMultiple: FALSE
 asStatic: FALSE
